@@ -71,16 +71,19 @@
     //Function to convert btm projected coordinates to WGS84 geographic coordinates
     //Easting = 557825m and Northing = 666932m gives Latitude = 24.116377062446542degree and Longitude = 90.5662427832349 respectively
     function btm_to_wgs84(easting, northing){
-        var lon = proj4(btm,wgs84,[easting, northing])[0];
-        var lat = proj4(btm,wgs84,[easting, northing])[1];
+        var lon = proj4(btm,wgs84,[easting, northing])[0].toFixed(6);
+        var lat = proj4(btm,wgs84,[easting, northing])[1].toFixed(6);
         return [lat, lon];
     };
-
-    var lat = btm_to_wgs84(557825, 666932)[0]
-    var lon = btm_to_wgs84(557825, 666932)[1]
+    var easting = 557825
+    var northing = 666932
+    var lat = btm_to_wgs84(easting, northing)[0]
+    var lon = btm_to_wgs84(easting, northing)[1]
     console.log(lat, lon)
     //console.log(proj4(btm,wgs84,[557825, 666932]));
 </script>
+
+
 <script type="text/javascript">
     //Latlon of PaniBhaban
     var defaultLat = 23.751304243418687;
@@ -112,7 +115,35 @@
     // or, add to an existing map:
     map.addControl(new L.Control.Fullscreen());
     L.marker([lat, lon]).addTo(map)
-        .bindPopup('A pretty CSS3 popup.<br> Easily customizable.')
+        .bindPopup(`Easting: ${easting} </br>
+        Northing: ${northing} </br>
+        Latitude: ${lat} </br>
+        Longitude: ${lon}`)
         .openPopup();
+
+    
+
+    L.Control.Watermark = L.Control.extend({
+        onAdd: function(map) {
+            var img = L.DomUtil.create('img');
+
+            img.src = 'assets/img/favicon.ico';
+            img.style.width = '30px';
+
+            return img;
+        },
+
+        onRemove: function(map) {
+            // Nothing to do here
+        }
+    });
+
+    L.control.watermark = function(opts) {
+        return new L.Control.Watermark(opts);
+    }
+
+    L.control.watermark({ position: 'bottomleft' }).addTo(map);
+
+
 </script>
 </html>
