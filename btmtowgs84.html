@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BTMvisualizer</title>
+</head>
+<body>
+    
+</body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/1.4.0/proj4.js" integrity="sha512-9FBAecJh0Z6E49D3yaooSbeH7Br8Pe+jVCsZVfo4alGWOuv5RqKwE5YsCv88Ma0iG8aUGWvfb92zDVJ9ywJPHA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+    //Custom Projection: BTM using Local Datum Everest 1930 (1937 Adjustment)
+    var proj_name = 'BTM'
+    var a = 6377276.34518
+    var b = 6356075.41511
+    var f = (a-b)/a
+    var f_inverse = 1/f
+    var dx = 283.7
+    var dy = 735.9
+    var dz = 261.1
+    var rx = 0
+    var ry = 0
+    var rz = 0
+    var s = 0
+    var proj = 'tmerc'  // Transverse Mercator
+    var fe = 500000     // False Easting
+    var fn = -2000000   // False Northing
+    var k = 0.9996      // Scale Factor
+    var lat_origin = 0  // Central Parallel
+    var lon_origin = 90 // Central Meridian
+    var unit = 'm'      // unit in meter
+    var btm = `+proj=${proj} +lat_0=${lat_origin} +lon_0=${lon_origin} +k=${k} +x_0=${fe} +y_0=${fn} +a=${a} +b=${b} +towgs84=${dx},${dy},${dz},${rx},${ry},${rz},${s} +units=${unit} +no_defs`
+    
+    //GCS WGS84
+    var wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+    
+    //Function to convert btm projected coordinates to WGS84 geographic coordinates
+    //Easting = 557825m and Northing = 666932m gives Latitude = 24.116377062446542degree and Longitude = 90.5662427832349 respectively
+    function btm_to_wgs84(easting, northing){
+        var lon = proj4(btm,wgs84,[easting, northing])[0];
+        var lat = proj4(btm,wgs84,[easting, northing])[1];
+        return [lat, lon];
+    };
+
+    var lat = btm_to_wgs84(557825, 666932)[0]
+    var lon = btm_to_wgs84(557825, 666932)[1]
+    console.log(lat, lon)
+    //console.log(proj4(btm,wgs84,[557825, 666932]));
+</script>
+</html>
