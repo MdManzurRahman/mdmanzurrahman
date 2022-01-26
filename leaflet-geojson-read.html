@@ -93,12 +93,12 @@
 	
 	
 	
-// loading GeoJSON file - Here my html and SWH_waterlevel_357_wgs84.geojson file resides in same folder
-	$.getJSON("gisdata/SWH_waterlevel_357_wgs84.geojson",function(data){
+// loading GeoJSON file
+	$.getJSON("gisdata/data.json",function(data){
 		// add GeoJSON layer to the map once the file is loaded
 		var datalayer = L.geoJSON(data ,{
 			onEachFeature: function(feature, featureLayer) {
-				featureLayer.bindPopup(feature.properties.Division);
+				featureLayer.bindPopup(feature.properties["Station ID"]);
 			}
 		}).addTo(map);
 		map.fitBounds(datalayer.getBounds());
