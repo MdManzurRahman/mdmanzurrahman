@@ -1,0 +1,111 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
+
+    <!-- Bootstrap CSS -->
+    <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+    crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    
+    <!--Favicon-->
+    <link rel="icon" type="image/x-icon" href="assets/img/favicon.ico" />
+
+    <!--Styles-->
+    <style>
+
+    .map-page {
+        width: 100%;
+        min-height: calc(100vh - 0px - 0px);
+        display: inline-block;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        align-content: center;
+        flex-direction: column;
+    }
+    </style>
+</head>
+<body>
+
+    <div> 
+        <div id="mapdiv" class="map-page"></div>
+    </div>
+
+</body>
+    <!-- Bootstrap Bundle with Popper -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+
+
+	<script src="js/leaflet.ajax.min.js"></script>
+<script type="text/javascript">
+    //Latlon of PaniBhaban for default view
+    var defaultLat = 23.751304243418687;
+    var defaultLon = 90.38852600972048;
+    var defaultZoom = 7;
+    
+	//Leaflet Functions
+    var map = L.map('mapdiv', {
+            center: [defaultLat, defaultLon],
+            zoom: defaultZoom,
+            zoomControl:true, 
+            attributionControl:true
+        })//.fitWorld();
+    var lyrOSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
+    //CartoDB layer names: light_all / dark_all / light_nonames / dark_nonames
+    var layerCartoDB = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+    });
+    var esriWorldGray = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+            maxZoom: 16
+        });
+    var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+	    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+    });
+    var layerGoogleMap = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {attribution: '&copy; Google'});
+    var layerGoogleMapSatelliteHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {attribution: '&copy; Google'});
+    //https://leaflet-extras.github.io/leaflet-providers/preview/ for more basemaps
+    map.addLayer(layerGoogleMapSatelliteHybrid);
+
+	//Adding Scale
+	L.control.scale({ position: 'bottomright' }).addTo(map);
+	
+	var geojsonLayer = new L.GeoJSON.AJAX("gisdata/SWH_waterlevel_357_wgs84.geojson");       
+	geojsonLayer.addTo(map);
+	
+	/*
+// loading GeoJSON file - Here my html and SWH_waterlevel_357_wgs84.geojson file resides in same folder
+$.getJSON("gisdata/SWH_waterlevel_357_wgs84.geojson",function(data){
+	// add GeoJSON layer to the map once the file is loaded
+	var datalayer = L.geoJSON(data ,{
+		onEachFeature: function(feature, featureLayer) {
+			featureLayer.bindPopup(feature.properties.Division);
+		}
+	}).addTo(map);
+	map.fitBounds(datalayer.getBounds());
+});
+	*/
+	
+</script>
+</html>
