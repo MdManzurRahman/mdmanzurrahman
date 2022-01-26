@@ -216,19 +216,26 @@
 			corners[vSide + hSide] = L.DomUtil.create('div', className, container);
 		}
 
-		createCorner('verticalcenter', 'left');
-		createCorner('verticalcenter', 'right');
+		createCorner('top', 'left');
+		createCorner('top', 'right');
+		createCorner('bottom', 'left');
+		createCorner('bottom', 'right');
+
+		createCorner('top', 'center');
+		createCorner('middle', 'center');
+		createCorner('middle', 'left');
+		createCorner('middle', 'right');
+		createCorner('bottom', 'center');
 	}
 	addControlPlaceholders(map);
 		
 	//Adding A Map Title
 	L.Control.textbox = L.Control.extend({
 		onAdd: function(map) {
-			
-		var text = L.DomUtil.create('div');
-		text.id = "info_text";
-		text.innerHTML = "<strong>text here</strong>"
-		return text;
+			var text = L.DomUtil.create('div');
+			text.id = "info_text";
+			text.innerHTML = "<strong>&copy Manzur</strong>"
+			return text;
 		},
 
 		onRemove: function(map) {
@@ -236,7 +243,7 @@
 		}
 	});
 	L.control.textbox = function(opts) { return new L.Control.textbox(opts);}
-	L.control.textbox({ position: 'verticalcenterright' }).addTo(map);
+	L.control.textbox({ position: 'bottomleft' }).addTo(map);
 	var marker
 	
 	$(document).ready(function(){

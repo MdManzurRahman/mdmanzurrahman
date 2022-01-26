@@ -57,7 +57,7 @@
     <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
 
 
-	<script src="js/leaflet.ajax.min.js"></script>
+
 <script type="text/javascript">
     //Latlon of PaniBhaban for default view
     var defaultLat = 23.751304243418687;
@@ -91,22 +91,18 @@
 	//Adding Scale
 	L.control.scale({ position: 'bottomright' }).addTo(map);
 	
-	/*
-	var geojsonLayer = new L.GeoJSON.AJAX("gisdata/SWH_waterlevel_357_wgs84.geojson");       
-	geojsonLayer.addTo(map);
-	*/
 	
 	
 // loading GeoJSON file - Here my html and SWH_waterlevel_357_wgs84.geojson file resides in same folder
-$.getJSON("gisdata/SWH_waterlevel_357_wgs84.geojson",function(data){
-	// add GeoJSON layer to the map once the file is loaded
-	var datalayer = L.geoJSON(data ,{
-		onEachFeature: function(feature, featureLayer) {
-			featureLayer.bindPopup(feature.properties.Division);
-		}
-	}).addTo(map);
-	map.fitBounds(datalayer.getBounds());
-});
+	$.getJSON("gisdata/SWH_waterlevel_357_wgs84.geojson",function(data){
+		// add GeoJSON layer to the map once the file is loaded
+		var datalayer = L.geoJSON(data ,{
+			onEachFeature: function(feature, featureLayer) {
+				featureLayer.bindPopup(feature.properties.Division);
+			}
+		}).addTo(map);
+		map.fitBounds(datalayer.getBounds());
+	});
 	
 	
 </script>
