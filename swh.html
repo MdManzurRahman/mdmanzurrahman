@@ -91,10 +91,12 @@
 	//Adding Scale
 	L.control.scale({ position: 'bottomright' }).addTo(map);
 	
+	/*
 	var geojsonLayer = new L.GeoJSON.AJAX("gisdata/SWH_waterlevel_357_wgs84.geojson");       
 	geojsonLayer.addTo(map);
+	*/
 	
-	/*
+	
 // loading GeoJSON file - Here my html and SWH_waterlevel_357_wgs84.geojson file resides in same folder
 $.getJSON("gisdata/SWH_waterlevel_357_wgs84.geojson",function(data){
 	// add GeoJSON layer to the map once the file is loaded
@@ -105,7 +107,7 @@ $.getJSON("gisdata/SWH_waterlevel_357_wgs84.geojson",function(data){
 	}).addTo(map);
 	map.fitBounds(datalayer.getBounds());
 });
-	*/
+	
 	
 </script>
 </html>
