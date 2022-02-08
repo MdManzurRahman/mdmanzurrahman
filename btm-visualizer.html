@@ -8,9 +8,12 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
     integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
     crossorigin=""/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+	
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
     integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
     crossorigin=""></script>
+	<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
 
     <!-- Bootstrap CSS -->
     <link
@@ -140,6 +143,8 @@
 	//var easting = wgs84_to_btm(lat , lon)[0]
 	//var northing = wgs84_to_btm(lat , lon)[1]
     //console.log(easting, northing);
+	
+	
 
     //console.log(proj4(btm,wgs84,[557825, 666932]));
 	
@@ -147,22 +152,35 @@
 
 
 <script type="text/javascript">
-    //Latlon of PaniBhaban
+    //Define Variable
+	var marker
+	
+	//Latlon of PaniBhaban
     var defaultLat = 23.751304243418687;
     var defaultLon = 90.38852600972048;
     var defaultZoom = 7;
-            //Leaflet Functions
+	
+	var bounds = new L.LatLngBounds(new L.LatLng(19, 87), new L.LatLng(27, 93));
+    
+	//Defining a leaflet map object
     var map = L.map('mapdiv', {
             center: [defaultLat, defaultLon],
             zoom: defaultZoom,
             zoomControl:true, 
-            attributionControl:true
-        })//.fitWorld();
+            attributionControl:true,
+			maxBounds: bounds,
+			maxBoundsViscosity: 0.1
+        })
+	//map.fitWorld();	
+	//map.fitBounds(bounds)
+	//map.fitBounds([[20, 88], [26, 92]])
+	
+		
+	//Basemaps xyz services	//https://leaflet-extras.github.io/leaflet-providers/preview/ for more basemaps
     var lyrOSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
-    //CartoDB layer names: light_all / dark_all / light_nonames / dark_nonames
     var layerCartoDB = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
-    });
+    });//CartoDB layer names: light_all / dark_all / light_nonames / dark_nonames
     var esriWorldGray = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
             attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
             maxZoom: 16
@@ -170,11 +188,48 @@
     var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
 	    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
     });
-    var layerGoogleMap = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {attribution: '&copy; Google'});
-    var layerGoogleMapSatelliteHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {attribution: '&copy; Google'});
-    //https://leaflet-extras.github.io/leaflet-providers/preview/ for more basemaps
+    var layerGoogleMap = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+		attribution: '&copy; Google',
+		maxZoom: 20
+	});
+    var layerGoogleMapSatelliteHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+		attribution: '&copy; Google',
+		maxZoom: 20
+	});
+	
+	//Add Basemap to Leaflet Map
     map.addLayer(layerGoogleMapSatelliteHybrid);
-    // or, add to an existing map:
+
+
+	// Create additional Control Placing Positions
+	function addControlPlaceholders(map) {
+		var corners = map._controlCorners,
+			l = 'leaflet-',
+			container = map._controlContainer;
+
+		function createCorner(vSide, hSide) {
+			var className = l + vSide + ' ' + l + hSide;
+
+			corners[vSide + hSide] = L.DomUtil.create('div', className, container);
+		}
+
+		//createCorner('top', 'left');
+		//createCorner('top', 'right');
+		//createCorner('bottom', 'left');
+		//createCorner('bottom', 'right');
+
+		createCorner('top', 'center');
+		createCorner('middle', 'center');
+		createCorner('middle', 'left');
+		createCorner('middle', 'right');
+		createCorner('bottom', 'center');
+	}
+	addControlPlaceholders(map);
+
+
+
+    
+	// Add Fullscreen Control
     map.addControl(new L.Control.Fullscreen());
 	
 	
@@ -193,7 +248,6 @@
             // Nothing to do here
         }
     });
-
     L.control.watermark = function(opts) {
         return new L.Control.Watermark(opts);
     }
@@ -204,31 +258,6 @@
 	L.control.scale({ position: 'bottomright' }).addTo(map);
 	
 	
-	// Create additional Control placeholders
-	function addControlPlaceholders(map) {
-		var corners = map._controlCorners,
-			l = 'leaflet-',
-			container = map._controlContainer;
-
-		function createCorner(vSide, hSide) {
-			var className = l + vSide + ' ' + l + hSide;
-
-			corners[vSide + hSide] = L.DomUtil.create('div', className, container);
-		}
-
-		createCorner('top', 'left');
-		createCorner('top', 'right');
-		createCorner('bottom', 'left');
-		createCorner('bottom', 'right');
-
-		createCorner('top', 'center');
-		createCorner('middle', 'center');
-		createCorner('middle', 'left');
-		createCorner('middle', 'right');
-		createCorner('bottom', 'center');
-	}
-	addControlPlaceholders(map);
-		
 	//Adding A Map Title
 	L.Control.textbox = L.Control.extend({
 		onAdd: function(map) {
@@ -244,20 +273,13 @@
 	});
 	L.control.textbox = function(opts) { return new L.Control.textbox(opts);}
 	L.control.textbox({ position: 'bottomleft' }).addTo(map);
-	var marker
 	
+	
+	//Main Code after document fully loaded
 	$(document).ready(function(){
 		$("#btnAddMarker").click(function(){
-		
-			/*
-			if ($("#frm")[0].checkValidity())
-				alert('sucess');
-			else
-				//Validate Form
-				$("#frm")[0].reportValidity()
-			*/
+
 			if ($("#frm")[0].checkValidity()) {
-				
 				//on successful validation
 				var easting = $("#easting").val()
 				var northing = $("#northing").val()
@@ -293,12 +315,52 @@
 							.bindPopup(`Easting: ${easting} &#8594 Longitude:${lon}<br>Northing: ${northing} &#8594 Latitude:${lat}`).update().openPopup();
 					});
 				}; 
-				
 			} else {
+				// Unsuccessful validation
 				$("#frm")[0].reportValidity()
 			}
 		});
 	});
+	
+	//Addining Location Control
+	var lc = L.control.locate({
+		position: 'topleft',
+		strings: {
+			title: "Locate"
+		},
+		locateOptions: {
+		   enableHighAccuracy: true
+		},
+		markerStyle: {
+			fillColor: '#CB8427'
+		},
+		circleStyle: {
+			fillColor: '#CB8427'
+		},
+		compassStyle: {
+			fillColor: '#CB8427'
+		},
+		icon: 'bi bi-geo-alt-fill' ,
+		iconLoading: 'fa fa-spinner fa-spin',
+		maxZoom: 10,
+
+	}).addTo(map);
+
+
+	function onLocationFound(e) {
+		//console.log(e)
+		console.log("accuracy (m)", e.accuracy, "latitude", e.latlng.lat, "Longitude", e.latlng.lng)
+		//$("#deviceLat").html(e.latlng.lat)
+		//$("#deviceLon").html(e.latlng.lng)
+		deviceLat = e.latlng.lat;
+		deviceLon = e.latlng.lng;
+	}
+	function onLocationError(e) {
+		alert("Device location not found");
+		lc.stop();  
+	}
+	map.on('locationfound', onLocationFound);
+	map.on('locationerror', onLocationError);	
 
 
 	
