@@ -1,0 +1,239 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>coordinate converstion</title>
+	
+	    <!-- Bootstrap CSS -->
+    <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+    crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+	
+    
+	<div class="container-fluid">
+
+		<div class="row p-2">
+			<h4>Coordinate Conversion Tool</h4>
+		</div>
+		<div class="row p-2">
+			<div class="col-6">
+				<select class="form-select" aria-label="Default select example" id="convertFrom" onchange="getFromValue()">
+				  <option selected>Convert From</option>
+				</select>
+			</div>
+			
+			<div class="col-6">
+				<select class="form-select" aria-label="Default select example" id="convertTo" onchange="getToValue()">
+				  <option selected>Convert To</option>
+				</select>
+			</div>
+		</div>
+		
+		<div class="row p-2">
+			<div class="col-6">
+				<input type="file" id="fileUpload" accept=".csv" onchange="Upload()" disabled />
+			</div>
+		</div>
+		
+		<div class="row p-2">
+			<div class="col-12">
+				<button type="button" class="btn btn-outline-secondary" id="btnDownload" onclick="downloadCSVFile()" disabled>download CSV</button>
+			</div>
+		</div>
+	
+	</div>
+	
+	<hr />
+	
+	<div class="p-2">
+		<p align="center">CSV Table</p>
+		<div id="dvCSV">
+		</div>
+	</div>
+
+</body>
+    <!-- Bootstrap Bundle with Popper -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+	
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.1/papaparse.min.js" integrity="sha512-EbdJQSugx0nVWrtyK3JdQQ/03mS3Q1UiAhRtErbwl1YL/+e2hZdlIcSURxxh7WXHTzn83sjlh2rysACoJGfb6g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	
+	<script>
+	var conversionItems = ["WGS84", "BTM", "BUTM2010", "UTM45N", "UTM46N"];
+	var convertFromElem = document.getElementById("convertFrom");
+	var convertToElem = document.getElementById("convertTo");
+	var convertFromVal
+	var convertToVal
+	
+	//Add Element in convertFrom List
+	for (var i = 0; i < conversionItems.length; i++){
+	  var item = conversionItems[i];
+	  var element = document.createElement("option");
+	  element.innerText = item;
+	  convertFromElem.append(element);
+	};
+	
+	function getFromValue(){
+		
+		convertFromVal = convertFromElem.options[convertFromElem.selectedIndex].text;
+		
+		var newConversionItems = [...conversionItems]	//shallow copy the list to keep the original list intact
+		//Remove the ConvertFrom item from the list
+		const index = newConversionItems.indexOf(convertFromVal);
+		if (index > -1) {
+		  newConversionItems.splice(index, 1); // 2nd parameter means remove one item only
+		}
+		
+		//Add Element in convertTo List (Remove if any available from previous selection
+		for (i in convertToElem.options) {
+			convertToElem.options.remove(0); 
+		};
+		for (var i = 0; i < newConversionItems.length; i++){
+		  var item = newConversionItems[i];
+		  var element = document.createElement("option");
+		  element.innerText = item;
+		  convertToElem.append(element);
+		};
+		
+		//convertToVal default is the first item of the new list
+		convertToVal = newConversionItems[0];
+		
+		console.log(convertFromVal);
+		console.log(convertToVal);
+		
+		if ((typeof convertFromVal !== "undefined") && (typeof convertToVal !== "undefined")){
+			document.getElementById('fileUpload').removeAttribute('disabled')
+		}
+		
+	};
+	
+	function getToValue(){
+		convertToVal = convertToElem.options[convertToElem.selectedIndex].text;
+		console.log(convertToVal);
+		if ((typeof convertFromVal !== "undefined") && (typeof convertToVal !== "undefined")){
+			document.getElementById('fileUpload').removeAttribute('disabled')
+		}
+	};
+	
+	</script>
+	
+	<script>
+		var csv_columns = []
+		var csv_data
+		var converted_csv_data
+		
+		var export_data = []
+		var eastings = []
+		var northings = []
+		
+		function Upload() {
+			var file = fileUpload.files[0]
+			// Parse local CSV file
+			Papa.parse(file, {
+				header: true,
+				skipEmptyLines: true,
+				complete: function(results) {
+					//console.table(results.data);
+					
+					csv_data = results.data
+					csv_columns = Object.keys(csv_data[0])
+					
+					
+					//Create HTML table for visualiztion of CSV Data
+					var table_html = '<table class="table table-bordered p-2">';
+					table_html += '<tr>';
+					//Preparing the header of the table
+					for( var j in csv_data[0] ) {
+						table_html += '<th>' + j + '</th>';
+					}
+					table_html += '</tr>';
+					
+					//Preparing the body of the table
+					for( var i = 0; i < csv_data.length; i++) {
+						table_html += '<tr>';
+						for( var j in csv_data[i] ) {
+							table_html += '<td>' + csv_data[i][j] + '</td>';
+						}
+						table_html += '</tr>';
+					}
+					
+					table_html += '</table>';
+					document.getElementById('dvCSV').innerHTML = table_html;
+					
+
+					
+					
+					if (csv_columns.includes("Easting") && csv_columns.includes("Northing")){
+						console.log('Easting Northing is in the csv')
+						
+						for (i=0; i<csv_data.length; i++){
+							//console.log('Easting',results.data[i].Easting); //string
+							//console.log('Northing',results.data[i].Northing); //string
+							
+							//Conversion and Push to List
+							eastings.push(Number(csv_data[i].Easting)+10000000);
+							northings.push(Number(csv_data[i].Northing)+2000000);
+							
+							
+							export_data.push([Number(csv_data[i].Easting)+10000000, Number(csv_data[i].Northing)+2000000])
+						}
+						
+						
+						
+						
+						
+						// Specifying fields and data explicitly
+						converted_csv_data = Papa.unparse({
+							"fields": ["Eastings", "Northings"],
+							"data": export_data
+						});
+						
+						
+						document.getElementById('btnDownload').removeAttribute('disabled')
+						
+					} else {
+						console.log('No Easting Northing is in the csv')
+					}
+				}
+			});
+		};
+		
+		
+        function downloadCSVFile() {
+            // Create CSV file object and feed
+            // our final csv_data into it
+            CSVFile = new Blob([converted_csv_data], {
+                type: "text/csv"
+            });
+ 
+            // Create to temporary link to initiate
+            // download process
+            var temp_link = document.createElement('a');
+ 
+            // Download csv file
+            temp_link.download = "GfG.csv";
+            var url = window.URL.createObjectURL(CSVFile);
+            temp_link.href = url;
+ 
+            // This link should not be displayed
+            temp_link.style.display = "none";
+            document.body.appendChild(temp_link);
+ 
+            // Automatically click the link to
+            // trigger download
+            temp_link.click();
+            document.body.removeChild(temp_link);
+        }
+	</script>
+</html>
