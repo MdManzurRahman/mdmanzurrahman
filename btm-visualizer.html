@@ -90,15 +90,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/1.4.0/proj4.js" integrity="sha512-9FBAecJh0Z6E49D3yaooSbeH7Br8Pe+jVCsZVfo4alGWOuv5RqKwE5YsCv88Ma0iG8aUGWvfb92zDVJ9ywJPHA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script type="text/javascript">
-    //Custom Projection: BTM using Local Datum Everest 1930 (1937 Adjustment)
+    //Custom Projection: BTM using Local Datum Everest 1930 (1937 Adjustment) EPSG 9678
     var proj_name = 'BTM'
     var a = 6377276.34518
     var b = 6356075.41511
     var f = (a-b)/a
     var f_inverse = 1/f
-    var dx = 283.7
-    var dy = 735.9
-    var dz = 261.1
+    var dx = 283.729
+    var dy = 735.942
+    var dz = 261.143
     var rx = 0
     var ry = 0
     var rz = 0
@@ -113,7 +113,12 @@
     var btm = `+proj=${proj} +lat_0=${lat_origin} +lon_0=${lon_origin} +k=${k} +x_0=${fe} +y_0=${fn} +a=${a} +b=${b} +towgs84=${dx},${dy},${dz},${rx},${ry},${rz},${s} +units=${unit} +no_defs`
     
     //GCS WGS84
-    var wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs";
+    var wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"; //epsg4326
+	
+	var utm45N = "+proj=utm +zone=45 +datum=WGS84 +units=m +no_defs"; //epsg32645
+	var utm46N = "+proj=utm +zone=46 +datum=WGS84 +units=m +no_defs"; //epsg32646
+	var butm2000 = "+proj=tmerc +lat_0=0 +lon_0=90 +k=0.9996 +x_0=500000 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs" //epsg9680
+	var gulshan303 = "+proj=longlat +ellps=evrst30 +towgs84=283.729,735.942,261.143,0,0,0,0 +no_defs"; //epsg4682
     
     //Function to convert btm projected coordinates to WGS84 geographic coordinates
     //Easting = 557825m and Northing = 666932m gives Latitude = 24.116377062446542degree and Longitude = 90.5662427832349 respectively
