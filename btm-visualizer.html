@@ -291,41 +291,49 @@
 				var lat = btm_to_wgs84(easting, northing)[0]
 				var lon = btm_to_wgs84(easting, northing)[1]
 				
-				// First remove previously created marker if any
-				if (marker){
-					map.removeLayer(marker)
-				};
-				
-				//Add New Marker
-				marker = L.marker([lat, lon], {
-					draggable: true,
-				})
-				.addTo(map)
-				.bindPopup(`Easting: ${easting} &#8594 Longitude:${lon}<br>Northing: ${northing} &#8594 Latitude:${lat}`)
-				.openPopup();
+			//Add marker
+			addMarker(lat, lon, easting, northing)	
 				
 				
-				if (marker) {
-					marker.on('dragend', function(e) {
-						lat = marker.getLatLng().lat.toFixed(6)
-						lon = marker.getLatLng().lng.toFixed(6)
-						console.log(lat,lon)
-						var easting = wgs84_to_btm(lat , lon)[0]
-						var northing = wgs84_to_btm(lat , lon)[1]
-						console.log(easting, northing);
-						$("#easting").val(easting);
-						$("#northing").val(northing);
-						//Update marker popup
-						marker.setLatLng(marker.getLatLng(),{draggable:true})
-							.bindPopup(`Easting: ${easting} &#8594 Longitude:${lon}<br>Northing: ${northing} &#8594 Latitude:${lat}`).update().openPopup();
-					});
-				}; 
 			} else {
 				// Unsuccessful validation
 				$("#frm")[0].reportValidity()
 			}
 		});
 	});
+	
+	//Function to Add Marker
+	function addMarker(lat, lon, easting, northing){
+		// First remove previously created marker if any
+		if (marker){
+			map.removeLayer(marker)
+		};
+		
+		//Add New Marker
+		marker = L.marker([lat, lon], {
+			draggable: true,
+		})
+		.addTo(map)
+		.bindPopup(`Easting: ${easting} &#8594 Longitude:${lon}<br>Northing: ${northing} &#8594 Latitude:${lat}`)
+		.openPopup();
+		
+		
+		if (marker) {
+			marker.on('dragend', function(e) {
+				lat = marker.getLatLng().lat.toFixed(6)
+				lon = marker.getLatLng().lng.toFixed(6)
+				console.log(lat,lon)
+				var easting = wgs84_to_btm(lat , lon)[0]
+				var northing = wgs84_to_btm(lat , lon)[1]
+				console.log(easting, northing);
+				$("#easting").val(easting);
+				$("#northing").val(northing);
+				//Update marker popup
+				marker.setLatLng(marker.getLatLng(),{draggable:true})
+					.bindPopup(`Easting: ${easting} &#8594 Longitude:${lon}<br>Northing: ${northing} &#8594 Latitude:${lat}`).update().openPopup();
+			});
+		}; 
+	}
 	
 	//Addining Location Control
 	var lc = L.control.locate({
@@ -359,6 +367,9 @@
 		//$("#deviceLon").html(e.latlng.lng)
 		deviceLat = e.latlng.lat;
 		deviceLon = e.latlng.lng;
+		deviceEasting = wgs84_to_btm(deviceLat, deviceLon)[0];
+		deviceNorthing = wgs84_to_btm(deviceLat, deviceLon)[1];
+		addMarker(deviceLat, deviceLon, deviceEasting, deviceNorthing);
 	}
 	function onLocationError(e) {
 		alert("Device location not found");
