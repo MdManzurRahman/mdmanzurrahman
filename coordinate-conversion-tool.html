@@ -45,7 +45,7 @@
 		
 		<div class="row p-2">
 			<div class="col-12">
-				<button type="button" class="btn btn-outline-secondary" id="btnDownload" onclick="downloadCSVFile()" disabled>download CSV</button>
+				<button type="button" class="btn btn-primary" id="btnDownload" onclick="downloadCSVFile()" disabled>download CSV</button>
 			</div>
 		</div>
 	
@@ -135,7 +135,9 @@
 	
 	
 	<script>
-	var conversionItems = ["WGS84", "GULSHAN303", "BTM", "BUTM2010", "UTM45N", "UTM46N"];
+	var gcsItems = ["WGS84", "GULSHAN303"]
+	var pcsItems = ["BTM", "BUTM2010", "UTM45N", "UTM46N"]
+	var conversionItems = gcsItems.concat(pcsItems);
 	var convertFromElem = document.getElementById("convertFrom");
 	var convertToElem = document.getElementById("convertTo");
 	var convertFromVal
@@ -214,33 +216,52 @@
 					csv_data = results.data
 					csv_columns = Object.keys(csv_data[0])
 					
-					
-
-					
-					
-
-					
-					//IF GCS
-					if (convertFromVal=="WGS84" || convertFromVal=="GULSHAN303"){
+					//IF converted from GCS
+					if (gcsItems.includes(convertFromVal)){
+						//Check for Lat Lon Column in CSV
 						if (csv_columns.includes("Latitude") && csv_columns.includes("Longitude")){
 							console.log("Latitude Longitude values found")
-							//Conversion code here
-							
-							for (i=0; i<csv_data.length; i++){
-								csv_data[i]["x_new"] = convert_coordinate(convertFromVal, convertToVal, csv_data[i].Longitude, csv_data[i].Latitude)[0]
-								csv_data[i].y_new = convert_coordinate(convertFromVal, convertToVal, csv_data[i].Longitude, csv_data[i].Latitude)[1]
+							//If converted to PCS (e.g., BTM, BUTM2010, UTM45N, UTM46N)
+							if (pcsItems.includes(convertToVal)){
+								for (i=0; i<csv_data.length; i++){
+									csv_data[i]["Easting_Converted"] = convert_coordinate(convertFromVal, convertToVal, csv_data[i]["Longitude"], csv_data[i]["Latitude"])[0]
+									csv_data[i]["Northing_Converted"] = convert_coordinate(convertFromVal, convertToVal, csv_data[i]["Longitude"], csv_data[i]["Latitude"])[1]
+								}
+							//If converted to GCS (e.g., WGS84, GULSHAN303)	
+							} else {
+								for (i=0; i<csv_data.length; i++){
+									csv_data[i]["Latitude_Converted"] = convert_coordinate(convertFromVal, convertToVal, csv_data[i]["Longitude"], csv_data[i]["Latitude"])[1]
+									csv_data[i]["Longitude_Converted"] = convert_coordinate(convertFromVal, convertToVal, csv_data[i]["Longitude"], csv_data[i]["Latitude"])[0]
+								}
 							}
-							
+							converted_csv_data = Papa.unparse(csv_data);
+							document.getElementById('btnDownload').removeAttribute('disabled')
+						//No Lat Lon Column present	
 						} else {
 							alert("CSV file does not contain Latitude Longitude values");
 							window.location.reload();
 						}
+					//IF converted from PCS	
 					} else {
+						//Check for Easting Northing Column in CSV
 						if (csv_columns.includes("Easting") && csv_columns.includes("Northing")){
 							console.log("Easting Northing values found")
 							//Conversion code here
-							
-							
+							//If converted to PCS (e.g., BTM, BUTM2010, UTM45N, UTM46N)
+							if (pcsItems.includes(convertToVal)){
+								for (i=0; i<csv_data.length; i++){
+									csv_data[i]["Easting_Converted"] = convert_coordinate(convertFromVal, convertToVal, csv_data[i]["Easting"], csv_data[i]["Northing"])[0]
+									csv_data[i]["Northing_Converted"] = convert_coordinate(convertFromVal, convertToVal, csv_data[i]["Easting"], csv_data[i]["Northing"])[1]
+								}
+							//If converted to GCS (e.g., WGS84, GULSHAN303)	
+							} else {
+								for (i=0; i<csv_data.length; i++){
+									csv_data[i]["Latitude_Converted"] = convert_coordinate(convertFromVal, convertToVal, csv_data[i]["Easting"], csv_data[i]["Northing"])[1]
+									csv_data[i]["Longitude_Converted"] = convert_coordinate(convertFromVal, convertToVal, csv_data[i]["Easting"], csv_data[i]["Northing"])[0]
+								}
+							}
+							converted_csv_data = Papa.unparse(csv_data);
+							document.getElementById('btnDownload').removeAttribute('disabled')
 						} else {
 							alert("CSV file does not contain Easting Northing values");
 							window.location.reload();
@@ -265,42 +286,7 @@
 					}
 					table_html += '</table>';
 					document.getElementById('dvCSV').innerHTML = table_html;
-					
-					/*
-					if (csv_columns.includes("Easting") && csv_columns.includes("Northing")){
-						console.log('Easting Northing is in the csv')
-						
-						for (i=0; i<csv_data.length; i++){
-							//console.log('Easting',results.data[i].Easting); //string
-							//console.log('Northing',results.data[i].Northing); //string
-							
-							//Conversion and Push to List
-							eastings.push(Number(csv_data[i].Easting)+10000000);
-							northings.push(Number(csv_data[i].Northing)+2000000);
-							
-							
-							export_data.push([Number(csv_data[i].Easting)+10000000, Number(csv_data[i].Northing)+2000000])
-						}
-						
-						
-						
-						
-						
-						// Specifying fields and data explicitly
-						converted_csv_data = Papa.unparse({
-							"fields": ["Eastings", "Northings"],
-							"data": export_data
-						});
-						
-						
-						document.getElementById('btnDownload').removeAttribute('disabled')
-						
-					} else {
-						console.log('No Easting Northing is in the csv')
-					}
-					
-					
-					*/
+
 				}
 			});
 		};
@@ -318,7 +304,7 @@
             var temp_link = document.createElement('a');
  
             // Download csv file
-            temp_link.download = "GfG.csv";
+            temp_link.download = convertFromVal+"_to_"+convertToVal+".csv";
             var url = window.URL.createObjectURL(CSVFile);
             temp_link.href = url;
  
@@ -330,6 +316,7 @@
             // trigger download
             temp_link.click();
             document.body.removeChild(temp_link);
+			window.location.reload();
         }
 	</script>
 </html>
