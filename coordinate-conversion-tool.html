@@ -19,44 +19,37 @@
 	
     
 	<div class="container-fluid">
-
-		<div class="row p-2">
-			<h4>Coordinate Conversion Tool</h4>
+		<div class="row">
+			<h4 class="col-12 text-center">Coordinate Conversion Tool</h4>
 		</div>
-		<div class="row p-2">
-			<div class="col-6">
+		<div>
+			<p class="col-12 text-center"><b><u>Instruction</u></b></br>Make sure there are <b>Latitude</b> and <b>Longitude</b> column header in your csv file while converting from geographic coordinate system or <b>Easting</b> and <b>Northing</b> while converting from projected coordinate system. Column header names are case sensitive</p>
+			<p class="col-12 text-center">Reference: Rahman M.M.(2022) Datum and Map Projection Conundrum for GIS Application in Bangladesh</p>
+		</div>
+		<div class="row justify-content-center">
+			<div class="col-auto g-3">
 				<select class="form-select" aria-label="Default select example" id="convertFrom" onchange="getFromValue()">
 				  <option selected>Convert From</option>
 				</select>
 			</div>
-			
-			<div class="col-6">
+			<div class="col-auto g-3">
 				<select class="form-select" aria-label="Default select example" id="convertTo" onchange="getToValue()">
 				  <option selected>Convert To</option>
 				</select>
 			</div>
-		</div>
-		
-		<div class="row p-2">
-			<div class="col-6">
-				<input type="file" id="fileUpload" accept=".csv" onchange="Upload()" disabled />
+			<div class="col-auto g-3">
+				<input class="form-control" type="file" id="fileUpload" accept=".csv" onchange="Upload()" disabled />
+			</div>
+			<div class="col-auto g-3">
+				<button type="button" class="btn btn-primary" id="btnDownload" onclick="downloadCSVFile()" disabled>download</button>
 			</div>
 		</div>
-		
-		<div class="row p-2">
-			<div class="col-12">
-				<button type="button" class="btn btn-primary" id="btnDownload" onclick="downloadCSVFile()" disabled>download CSV</button>
-			</div>
-		</div>
-	
 	</div>
 	
 	<hr />
 	
 	<div class="p-2">
-		<p align="center">CSV Table</p>
-		<div id="dvCSV">
-		</div>
+		<div id="dvCSV"></div>
 	</div>
 
 </body>
@@ -79,11 +72,10 @@
 		var gulshan303 = "+proj=longlat +ellps=evrst30 +towgs84=283.729,735.942,261.143,0,0,0,0 +no_defs"; //epsg4682
 		
 		//Projected Coordinate Systems
-		
 		//BTM using Local Datum Everest 1930 (1937 Adjustment) EPSG 9678
 		var proj_name = 'BTM'
-		var a = 6377276.34518
-		var b = 6356075.41511
+		var a = 6377276.345
+		var b = 6356075.413
 		var f = (a-b)/a
 		var f_inverse = 1/f
 		var dx = 283.729
@@ -134,68 +126,68 @@
 	
 	
 	
-	<script>
-	var gcsItems = ["WGS84", "GULSHAN303"]
-	var pcsItems = ["BTM", "BUTM2010", "UTM45N", "UTM46N"]
-	var conversionItems = gcsItems.concat(pcsItems);
-	var convertFromElem = document.getElementById("convertFrom");
-	var convertToElem = document.getElementById("convertTo");
-	var convertFromVal
-	var convertToVal
-	
-	//Add Element in convertFrom List
-	for (var i = 0; i < conversionItems.length; i++){
-	  var item = conversionItems[i];
-	  var element = document.createElement("option");
-	  element.innerText = item;
-	  convertFromElem.append(element);
-	};
-	
-	function getFromValue(){
+	<script type="text/javascript">
+		var gcsItems = ["WGS84", "GULSHAN303"]
+		var pcsItems = ["BTM", "BUTM2010", "UTM45N", "UTM46N"]
+		var conversionItems = gcsItems.concat(pcsItems);
+		var convertFromElem = document.getElementById("convertFrom");
+		var convertToElem = document.getElementById("convertTo");
+		var convertFromVal
+		var convertToVal
 		
-		convertFromVal = convertFromElem.options[convertFromElem.selectedIndex].text;
-		
-		var newConversionItems = [...conversionItems]	//shallow copy the list to keep the original list intact
-		//Remove the ConvertFrom item from the list
-		const index = newConversionItems.indexOf(convertFromVal);
-		if (index > -1) {
-		  newConversionItems.splice(index, 1); // 2nd parameter means remove one item only
-		}
-		
-		//Add Element in convertTo List (Remove if any available from previous selection
-		for (i in convertToElem.options) {
-			convertToElem.options.remove(0); 
-		};
-		for (var i = 0; i < newConversionItems.length; i++){
-		  var item = newConversionItems[i];
+		//Add Element in convertFrom List
+		for (var i = 0; i < conversionItems.length; i++){
+		  var item = conversionItems[i];
 		  var element = document.createElement("option");
 		  element.innerText = item;
-		  convertToElem.append(element);
+		  convertFromElem.append(element);
 		};
 		
-		//convertToVal default is the first item of the new list
-		convertToVal = newConversionItems[0];
+		function getFromValue(){
+			
+			convertFromVal = convertFromElem.options[convertFromElem.selectedIndex].text;
+			
+			var newConversionItems = [...conversionItems]	//shallow copy the list to keep the original list intact
+			//Remove the ConvertFrom item from the list
+			const index = newConversionItems.indexOf(convertFromVal);
+			if (index > -1) {
+			  newConversionItems.splice(index, 1); // 2nd parameter means remove one item only
+			}
+			
+			//Add Element in convertTo List (Remove if any available from previous selection
+			for (i in convertToElem.options) {
+				convertToElem.options.remove(0); 
+			};
+			for (var i = 0; i < newConversionItems.length; i++){
+			  var item = newConversionItems[i];
+			  var element = document.createElement("option");
+			  element.innerText = item;
+			  convertToElem.append(element);
+			};
+			
+			//convertToVal default is the first item of the new list
+			convertToVal = newConversionItems[0];
+			
+			console.log(convertFromVal);
+			console.log(convertToVal);
+			
+			if ((typeof convertFromVal !== "undefined") && (typeof convertToVal !== "undefined")){
+				document.getElementById('fileUpload').removeAttribute('disabled')
+			}
+			
+		};
 		
-		console.log(convertFromVal);
-		console.log(convertToVal);
+		function getToValue(){
+			convertToVal = convertToElem.options[convertToElem.selectedIndex].text;
+			console.log(convertToVal);
+			if ((typeof convertFromVal !== "undefined") && (typeof convertToVal !== "undefined")){
+				document.getElementById('fileUpload').removeAttribute('disabled')
+			}
+		};
 		
-		if ((typeof convertFromVal !== "undefined") && (typeof convertToVal !== "undefined")){
-			document.getElementById('fileUpload').removeAttribute('disabled')
-		}
-		
-	};
-	
-	function getToValue(){
-		convertToVal = convertToElem.options[convertToElem.selectedIndex].text;
-		console.log(convertToVal);
-		if ((typeof convertFromVal !== "undefined") && (typeof convertToVal !== "undefined")){
-			document.getElementById('fileUpload').removeAttribute('disabled')
-		}
-	};
-	
 	</script>
 	
-	<script>
+	<script type="text/javascript">
 		var csv_columns = []
 		var csv_data
 		var converted_csv_data
@@ -269,7 +261,7 @@
 					}
 					
 					//Create HTML table for visualiztion of CSV Data
-					var table_html = '<table class="table table-bordered p-2">';
+					var table_html = '<table class="table table-bordered table-hover p-2">';
 					table_html += '<tr>';
 					//Preparing the header of the table
 					for( var j in csv_data[0] ) {
