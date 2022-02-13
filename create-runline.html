@@ -1,0 +1,326 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+    crossorigin=""/>
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+	
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+    crossorigin=""></script>
+	<script src="https://cdn.jsdelivr.net/npm/leaflet.locatecontrol/dist/L.Control.Locate.min.js" charset="utf-8"></script>
+	
+	<!-- Bootstrap CSS -->
+    <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+    crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	
+    <style type="text/css">
+        body
+        {
+            font-family: Arial;
+            font-size: 10pt;
+        }
+        table
+        {
+            border: 1px solid #ccc;
+            border-collapse:collapse;
+        }
+        table th
+        {
+            background-color: #F7F7F7;
+            color: #333;
+            font-weight: bold;
+        }
+        table th, table td
+        {
+            border: 1px solid #ccc;
+            padding: 5px;
+        }
+		.map-page {
+			width: 100%;
+			min-height: calc(100vh - 92px - 56px);
+			display: inline-block;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			align-content: center;
+			flex-direction: column;
+		}
+    </style>
+</head>
+<body>
+
+
+    <input type="file" id="fileUpload" />
+    <input type="button" id="upload" value="Upload" />
+    <hr />
+    <div id="dvTable">
+    </div>
+	<div> 
+        <div id="mapdiv" class="map-page"></div>
+    </div>
+</body>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/1.4.0/proj4.js" integrity="sha512-9FBAecJh0Z6E49D3yaooSbeH7Br8Pe+jVCsZVfo4alGWOuv5RqKwE5YsCv88Ma0iG8aUGWvfb92zDVJ9ywJPHA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+	<script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
+	
+
+	<script type="text/javascript">
+		//Geographic Coordinate Systems
+		var wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"; //epsg4326
+		var gulshan303 = "+proj=longlat +ellps=evrst30 +towgs84=283.729,735.942,261.143,0,0,0,0 +no_defs"; //epsg4682
+		
+		//Projected Coordinate Systems
+		//BTM using Local Datum Everest 1930 (1937 Adjustment) EPSG 9678
+		var proj_name = 'BTM'
+		var a = 6377276.345
+		var b = 6356075.413
+		var f = (a-b)/a
+		var f_inverse = 1/f
+		var dx = 283.729
+		var dy = 735.942
+		var dz = 261.143
+		var rx = 0
+		var ry = 0
+		var rz = 0
+		var s = 0
+		var proj = 'tmerc'  // Transverse Mercator
+		var fe = 500000     // False Easting
+		var fn = -2000000   // False Northing
+		var k = 0.9996      // Scale Factor
+		var lat_origin = 0  // Central Parallel
+		var lon_origin = 90 // Central Meridian
+		var unit = 'm'      // unit in meter
+		var btm = `+proj=${proj} +lat_0=${lat_origin} +lon_0=${lon_origin} +k=${k} +x_0=${fe} +y_0=${fn} +a=${a} +b=${b} +towgs84=${dx},${dy},${dz},${rx},${ry},${rz},${s} +units=${unit} +no_defs`
+		
+		//using global WGS84 datum
+		var utm45N = "+proj=utm +zone=45 +datum=WGS84 +units=m +no_defs"; //epsg32645
+		var utm46N = "+proj=utm +zone=46 +datum=WGS84 +units=m +no_defs"; //epsg32646
+		var butm2000 = "+proj=tmerc +lat_0=0 +lon_0=90 +k=0.9996 +x_0=500000 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs" //epsg9680
+		
+		
+		var coordinate_systems = {
+			"WGS84":wgs84,
+			"GULSHAN303":gulshan303,
+			"BTM": btm, 
+			"BUTM2010":butm2000, 
+			"UTM45N":utm45N, 
+			"UTM46N":utm46N
+		}
+		
+		//General Conversion Function lon,easting = x and lat,northing = y
+		function convert_coordinate(from,to,x,y){
+			var converted_x = proj4(coordinate_systems[from], coordinate_systems[to], [x,y])[0]
+			var converted_y = proj4(coordinate_systems[from], coordinate_systems[to], [x,y])[1]
+			return [converted_x, converted_y]
+		}
+		
+		//Testing
+		//Easting = 557825m and Northing = 666932m gives Latitude = 24.116377062446542degree and Longitude = 90.5662427832349 respectively
+		//var lat = convert_coordinate("BTM", "WGS84", 557825, 666932)[1]
+		//var lon = convert_coordinate("BTM", "WGS84", 557825, 666932)[0]
+		//console.log(lat, lon);
+		
+	</script>
+	
+    <script type="text/javascript">
+	
+		var convertFromVal = "WGS84"
+		var convertToVal = "UTM45N"
+		var coords = []
+		var latitude = []
+		var longitude = []
+		var easting = []
+		var northing = []
+		var distance = 0.1 //kilometer
+		var transectLength = 0.2 //kilometer
+        $(function () {
+            $("#upload").bind("click", function () {
+                var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.kml)$/;
+                if (regex.test($("#fileUpload").val().toLowerCase())) {
+                    if (typeof (FileReader) != "undefined") {
+                        var reader = new FileReader();
+                        reader.onload = function (e) {
+                            var xmlDoc = $.parseXML(e.target.result);
+                            var coordinates = $(xmlDoc).find("coordinates")[0].innerHTML.trim().split(" ");
+							//console.log(coordinates)
+							for (var i = 0; i < coordinates.length; i++){
+								lat = Number(coordinates[i].split(",")[1])
+								lon = Number(coordinates[i].split(",")[0])
+								est = convert_coordinate(convertFromVal, convertToVal, lon, lat)[1].toFixed(0)
+								nrt = convert_coordinate(convertFromVal, convertToVal, lon, lat)[0].toFixed(0)
+								latitude.push(lat)
+								longitude.push(lon)
+								easting.push(est)
+								northing.push(nrt)
+								coords.push([lat,lon])
+							}
+							console.log(coords)
+
+							var l = L.polyline(coords).addTo(map)
+							var jsonLine=l.toGeoJSON();
+							//console.log(jsonLine);
+							var length = turf.lineDistance(jsonLine, 'kilometers');
+							//var dist=Math.floor(length);
+							console.log("Shape Length", length, "km")
+							
+							//create a blank intermediate point featurecollection
+							var interimPointsJson = {
+								"type": "FeatureCollection",
+								"features": []
+							};
+							
+							//Create a blank feature collection to store adjacents to the interim point
+							var interimAdjacentsJson = {
+								"type": "FeatureCollection",
+								"features": []
+							};
+							
+							//Create a blank feature collection to store transects (bothside) to the 
+							var transectsLeftJson = {
+								"type": "FeatureCollection",
+								"features": []
+							};
+							var transectsRightJson = {
+								"type": "FeatureCollection",
+								"features": []
+							};
+							
+							
+							for(let i = 1; i <= length / distance; i++){
+								interimPointsJson.features.push(turf.along(jsonLine, i * distance,'kilometers'));
+								
+								
+								var interimPoint = turf.along(jsonLine, i * distance,'kilometers');
+								var backPoint = turf.along(jsonLine, ((i * distance)-(0.01*distance)),'kilometers');
+								var forePoint = turf.along(jsonLine, ((i * distance)+(0.01*distance)),'kilometers');
+								var bearing = turf.bearing(backPoint, forePoint)
+								var adjacentLeft = turf.rhumbDestination(interimPoint, transectLength, bearing-90, {units: 'kilometers'});
+								var adjacentRight = turf.rhumbDestination(interimPoint, transectLength, bearing+90, {units: 'kilometers'});
+								interimAdjacentsJson.features.push(adjacentLeft)
+								interimAdjacentsJson.features.push(adjacentRight)
+								transectLeft = turf.lineString([interimPoint.geometry.coordinates,adjacentLeft.geometry.coordinates])
+								transectRight = turf.lineString([interimPoint.geometry.coordinates,adjacentRight.geometry.coordinates])
+								transectsLeftJson.features.push(transectLeft)
+								transectsRightJson.features.push(transectRight)
+								console.log(transectLeft)
+							}
+							//console.log(interimPoints.features[0].geometry.coordinates)
+							//L.geoJson(interimPointsJson).addTo(map);
+							//L.geoJson(interimAdjacentsJson).addTo(map);
+							L.geoJson(transectsLeftJson).addTo(map);
+							L.geoJson(transectsRightJson).addTo(map);
+							
+							/*
+                            //Create a HTML Table element.
+                            var table = $("<table />");
+                            table[0].border = "1";
+
+                            //Add the header row.
+                            var row = $(table[0].insertRow(-1));
+                            customers.eq(0).children().each(function () {
+                                var headerCell = $("<th />");
+                                headerCell.html(this.nodeName);
+                                row.append(headerCell);
+                            });
+
+                            //Add the data rows.
+                            $(customers).each(function () {
+                                row = $(table[0].insertRow(-1));
+                                $(this).children().each(function () {
+                                    var cell = $("<td />");
+                                    cell.html($(this).text());
+                                    row.append(cell);
+                                });
+                            });
+
+                            var dvTable = $("#dvTable");
+                            dvTable.html("");
+                            dvTable.append(table);
+							*/
+                        }
+                        reader.readAsText($("#fileUpload")[0].files[0]);
+                    } else {
+                        alert("This browser does not support HTML5.");
+                    }
+                } else {
+                    alert("Please upload a valid XML file.");
+                }
+            });
+        });
+		
+		//Leaflet (like Google Maps) uses the [latitude, longitude] schema, while Turf follows the GeoJSON definition of [longitude, latitude], i.e. the equivalent of [x, y] on a geometrical plane.
+		function getLeafletCoordsFromTurf(point) {
+			return turf.getCoords(point).slice().reverse();
+		}
+
+    </script>
+	<script>
+		//Define Variable
+		var marker
+		
+		//Latlon of PaniBhaban
+		var defaultLat = 23.751304243418687;
+		var defaultLon = 90.38852600972048;
+		var defaultZoom = 7;
+		
+		var bounds = new L.LatLngBounds(new L.LatLng(19, 87), new L.LatLng(27, 93));
+		
+		//Defining a leaflet map object
+		var map = L.map('mapdiv', {
+				center: [defaultLat, defaultLon],
+				zoom: defaultZoom,
+				zoomControl:true, 
+				attributionControl:true,
+				maxBounds: bounds,
+				maxBoundsViscosity: 0.1
+			})
+		//map.fitWorld();	
+		//map.fitBounds(bounds)
+		//map.fitBounds([[20, 88], [26, 92]])
+		
+			
+		//Basemaps xyz services	//https://leaflet-extras.github.io/leaflet-providers/preview/ for more basemaps
+		var lyrOSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
+		var layerCartoDB = L.tileLayer('http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+			attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, &copy; <a href="http://cartodb.com/attributions">CartoDB</a>'
+		});//CartoDB layer names: light_all / dark_all / light_nonames / dark_nonames
+		var esriWorldGray = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+				attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+				maxZoom: 16
+			});
+		var Esri_WorldImagery = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+			attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+		});
+		var layerGoogleMap = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+			attribution: '&copy; Google',
+			maxZoom: 20
+		});
+		var layerGoogleMapSatelliteHybrid = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+			attribution: '&copy; Google',
+			maxZoom: 20
+		});
+		
+		//Add Basemap to Leaflet Map
+		map.addLayer(layerGoogleMapSatelliteHybrid);
+	</script>
+
+</html>

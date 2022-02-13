@@ -24,6 +24,67 @@
 		</div>
 		<div>
 			<p class="col-12 text-center"><b><u>Instruction</u></b></br>Make sure there are <b>Latitude</b> and <b>Longitude</b> column header in your csv file while converting from geographic coordinate system <i>(e.g., WGS84, GULSHAN303)</i> or <b>Easting</b> and <b>Northing</b> while converting from projected coordinate system <i>(e.g., BTM, BUTM2010, UTM45N, UTM46N)</i>. Column header names are case sensitive</p>
+			<!--
+			<table class="table table-bordered p-2">
+				<tr>
+					<th>Coordinate</th>
+					<th>WGS84</th>
+					<th>GULSHAN303</th>
+					<th>KALIANPUR1937</th>
+					<th>BTM</th>
+					<th>BUTM1995</th>
+					<th>BUTM2010</th>
+					<th>UTM45N</th>
+					<th>UTM46N</th>
+				</tr>
+				<tr>
+					<td>Latitude</td>
+					<td>23.797785</td>
+					<td>23.797079</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+
+				</tr>
+				<tr>
+					<td>Longitude</td>
+					<td>90.415650</td>
+					<td>90.418487</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td></td>
+
+				</tr>
+				<tr>
+					<td>Easting</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td>542625.54</td>
+					<td>542625.54</td>
+					<td>542342.27</td>
+					<td>848090.13</td>
+					<td>236673.27</td>
+				</tr>
+				<tr>
+					<td>Northing</td>
+					<td></td>
+					<td></td>
+					<td></td>
+					<td>631605.72</td>
+					<td>2631605.72</td>
+					<td>2631900.83</td>
+					<td>2636028.86</td>
+					<td>2634236.29</td>
+				</tr>
+			</table>
+			-->
 			<p class="col-12 text-center">Reference: <b><i> Rahman M.M.(2022) An overview of Horizontal Datum and Map Projection for GIS Application in Bangladesh</i></b></p>
 		</div>
 		<div class="row justify-content-center">
@@ -70,7 +131,7 @@
 		//Geographic Coordinate Systems
 		var wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"; //epsg4326
 		var gulshan303 = "+proj=longlat +ellps=evrst30 +towgs84=283.729,735.942,261.143,0,0,0,0 +no_defs"; //epsg4682
-		
+		var kalianpur1937 = "+proj=longlat +ellps=evrst30 +towgs84=282,726,254,0,0,0,0 +no_defs"; //epsg4144
 		//Projected Coordinate Systems
 		//BTM using Local Datum Everest 1930 (1937 Adjustment) EPSG 9678
 		var proj_name = 'BTM'
@@ -93,6 +154,8 @@
 		var lon_origin = 90 // Central Meridian
 		var unit = 'm'      // unit in meter
 		var btm = `+proj=${proj} +lat_0=${lat_origin} +lon_0=${lon_origin} +k=${k} +x_0=${fe} +y_0=${fn} +a=${a} +b=${b} +towgs84=${dx},${dy},${dz},${rx},${ry},${rz},${s} +units=${unit} +no_defs`
+		//Gulshan 303 / TM 90 NE EPSG3106
+		var butm1995 = "+proj=tmerc +lat_0=0 +lon_0=90 +k=0.9996 +x_0=500000 +y_0=0 +ellps=evrst30 +towgs84=283.729,735.942,261.143,0,0,0,0 +units=m +no_defs"
 		
 		//using global WGS84 datum
 		var utm45N = "+proj=utm +zone=45 +datum=WGS84 +units=m +no_defs"; //epsg32645
@@ -103,7 +166,9 @@
 		var coordinate_systems = {
 			"WGS84":wgs84,
 			"GULSHAN303":gulshan303,
-			"BTM": btm, 
+			"KALIANPUR1937": kalianpur1937,
+			"BTM": btm,
+			"BUTM1995":butm1995,
 			"BUTM2010":butm2000, 
 			"UTM45N":utm45N, 
 			"UTM46N":utm46N
@@ -127,8 +192,8 @@
 	
 	
 	<script type="text/javascript">
-		var gcsItems = ["WGS84", "GULSHAN303"]
-		var pcsItems = ["BTM", "BUTM2010", "UTM45N", "UTM46N"]
+		var gcsItems = ["WGS84", "GULSHAN303", "KALIANPUR1937"]
+		var pcsItems = ["BTM", "BUTM1995", "BUTM2010", "UTM45N", "UTM46N"]
 		var conversionItems = gcsItems.concat(pcsItems);
 		var convertFromElem = document.getElementById("convertFrom");
 		var convertToElem = document.getElementById("convertTo");
