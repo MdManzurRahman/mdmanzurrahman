@@ -58,9 +58,25 @@
 </head>
 <body>
 
-
+	<label for="fileUpload">KML Upload:</label>
     <input type="file" id="fileUpload" />
-    <input type="button" id="upload" value="Upload" />
+    
+	
+	<label for="transectInterval">Transect Interval (m):</label>
+	<input type="number" id="transectInterval" name="transectInterval" value=500>
+	
+	<label for="transectLength">Transect Length (m):</label>
+	<input type="number" id="transectLength" name="transectInterval" value=200>
+	
+	<label for="transectLength">Choose side of the Transects</label>
+	<select name="transectSide" id="transectSide">
+	  <option value="leftTransect">Left</option>
+	  <option value="rightTransect">Right</option>
+	  <option value="bothTransect" selected>Both</option>
+	</select>
+	
+	<input type="button" id="upload" value="Compute" />
+	
     <hr />
     <div id="dvTable">
     </div>
@@ -150,13 +166,21 @@
 		var longitude = []
 		var easting = []
 		var northing = []
-		var distance = 0.1 //kilometer
-		var transectLength = 0.2 //kilometer
+		//var transectInterval = 0.1 //kilometer
+		//var transectLength = 0.2 //kilometer
         $(function () {
             $("#upload").bind("click", function () {
                 var regex = /^([a-zA-Z0-9\s_\\.\-:])+(.kml)$/;
                 if (regex.test($("#fileUpload").val().toLowerCase())) {
                     if (typeof (FileReader) != "undefined") {
+						var transectInterval = $("#transectInterval").val()/1000
+						var transectLength = $("#transectLength").val()/1000
+						var transectSide = $("#transectSide").val()
+						
+						
+
+						
+						
                         var reader = new FileReader();
                         reader.onload = function (e) {
                             var xmlDoc = $.parseXML(e.target.result);
@@ -173,14 +197,14 @@
 								northing.push(nrt)
 								coords.push([lat,lon])
 							}
-							console.log(coords)
+							//console.log(coords)
 
 							var l = L.polyline(coords).addTo(map)
 							var jsonLine=l.toGeoJSON();
 							//console.log(jsonLine);
 							var length = turf.lineDistance(jsonLine, 'kilometers');
 							//var dist=Math.floor(length);
-							console.log("Shape Length", length, "km")
+							//console.log("Shape Length", length, "km")
 							
 							//create a blank intermediate point featurecollection
 							var interimPointsJson = {
@@ -189,45 +213,56 @@
 							};
 							
 							//Create a blank feature collection to store adjacents to the interim point
-							var interimAdjacentsJson = {
+							var transectPointsJson = {
 								"type": "FeatureCollection",
 								"features": []
 							};
 							
-							//Create a blank feature collection to store transects (bothside) to the 
-							var transectsLeftJson = {
-								"type": "FeatureCollection",
-								"features": []
-							};
-							var transectsRightJson = {
+							//Create a blank feature collection to store transects 
+							var transectLinesJson = {
 								"type": "FeatureCollection",
 								"features": []
 							};
 							
 							
-							for(let i = 1; i <= length / distance; i++){
-								interimPointsJson.features.push(turf.along(jsonLine, i * distance,'kilometers'));
+							
+							for(let i = 1; i <= length / transectInterval; i++){
+								interimPointsJson.features.push(turf.along(jsonLine, i * transectInterval,'kilometers'));
 								
 								
-								var interimPoint = turf.along(jsonLine, i * distance,'kilometers');
-								var backPoint = turf.along(jsonLine, ((i * distance)-(0.01*distance)),'kilometers');
-								var forePoint = turf.along(jsonLine, ((i * distance)+(0.01*distance)),'kilometers');
+								var interimPoint = turf.along(jsonLine, i * transectInterval,'kilometers');
+								var backPoint = turf.along(jsonLine, ((i * transectInterval)-(0.01*transectInterval)),'kilometers');
+								var forePoint = turf.along(jsonLine, ((i * transectInterval)+(0.01*transectInterval)),'kilometers');
 								var bearing = turf.bearing(backPoint, forePoint)
-								var adjacentLeft = turf.rhumbDestination(interimPoint, transectLength, bearing-90, {units: 'kilometers'});
-								var adjacentRight = turf.rhumbDestination(interimPoint, transectLength, bearing+90, {units: 'kilometers'});
-								interimAdjacentsJson.features.push(adjacentLeft)
-								interimAdjacentsJson.features.push(adjacentRight)
-								transectLeft = turf.lineString([interimPoint.geometry.coordinates,adjacentLeft.geometry.coordinates])
-								transectRight = turf.lineString([interimPoint.geometry.coordinates,adjacentRight.geometry.coordinates])
-								transectsLeftJson.features.push(transectLeft)
-								transectsRightJson.features.push(transectRight)
-								console.log(transectLeft)
+								
+								if (transectSide == "leftTransect") {
+									var adjacentLeft = turf.rhumbDestination(interimPoint, transectLength, bearing-90, {units: 'kilometers'});
+									var adjacentRight = interimPoint
+								} else if (transectSide == "rightTransect") {
+									var adjacentLeft = interimPoint
+									var adjacentRight = turf.rhumbDestination(interimPoint, transectLength, bearing+90, {units: 'kilometers'});
+								} else if (transectSide == "bothTransect") {
+									var adjacentLeft = turf.rhumbDestination(interimPoint, transectLength/2, bearing-90, {units: 'kilometers'});
+									var adjacentRight = turf.rhumbDestination(interimPoint, transectLength/2, bearing+90, {units: 'kilometers'});
+								} else {
+									alert("Please Select Side");
+									window.location.reload();
+								}
+
+								transectPointsJson.features.push(adjacentLeft)
+								transectPointsJson.features.push(adjacentRight)
+								
+								transectLine = turf.lineString([adjacentLeft.geometry.coordinates, adjacentRight.geometry.coordinates]);
+								transectLinesJson.features.push(transectLine);
+								
+								
+								
 							}
 							//console.log(interimPoints.features[0].geometry.coordinates)
-							//L.geoJson(interimPointsJson).addTo(map);
-							//L.geoJson(interimAdjacentsJson).addTo(map);
-							L.geoJson(transectsLeftJson).addTo(map);
-							L.geoJson(transectsRightJson).addTo(map);
+							L.geoJson(transectPointsJson).addTo(map);
+							L.geoJson(transectLinesJson).addTo(map);
+							map.fitBounds(l.getBounds())
+							console.log(transectPointsJson.features)
 							
 							/*
                             //Create a HTML Table element.
