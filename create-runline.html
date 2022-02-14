@@ -29,7 +29,7 @@
 		html,body{height:100%;}
 		.map-page {
 			width: 100%;
-			min-height: calc(100vh - 92px - 56px);
+			min-height: 50vh;
 			display: inline-block;
 			display: flex;
 			align-items: center;
@@ -45,6 +45,11 @@
 		<div class="row">
 			<h4 class="col-12 text-center">Transects Generation Tool</h4>
 		</div>
+		<div class="row">
+			<p class="col-12 text-center"><b><u>Instruction</u></b></br>Draw a polyline in Google Earth. Remeber the drawing direction since it will be required to determine transects drawing side (e.g., Left transects will be drawn perpendicular on the left side of drawing direction). Upload the KML file. Input the <b>Transect Interval</b> in meter (i.e., distance between two consecutive transects). Input the total <b>Transect Size</b> in meter. Select the side of drawing. Choose the projected coordinate system to get the coordinate in Easting, Northing. Finally click <b>Download CSV</b> to download geolocations of left and right point of transects in desired format</p>
+			<p class="col-12 text-center">Written By: <b><u><a href="https://mdmanzurrahman.github.io">Md Manzur Rahman</a></u></b>, Sub-Divisional Engineer (Civil), Central GIS Directorate, Bangladesh Water Development Board</p>
+		</div>
+		
 		<div class="row justify-content-center">
 		
 			<div class="col-auto g-3">
@@ -102,11 +107,6 @@
 
 	
 	</div>
-	
-
-
-	
-    
 
 	<div id="dvTable"></div>
 </body>
@@ -124,64 +124,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/proj4js/1.4.0/proj4.js" integrity="sha512-9FBAecJh0Z6E49D3yaooSbeH7Br8Pe+jVCsZVfo4alGWOuv5RqKwE5YsCv88Ma0iG8aUGWvfb92zDVJ9ywJPHA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 	<script src='https://unpkg.com/@turf/turf@6/turf.min.js'></script>
 	
+	<script src="js/bangladesh-projections-min.js"></script>
 
-	<script type="text/javascript">
-		//Geographic Coordinate Systems
-		var wgs84 = "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs"; //epsg4326
-		var gulshan303 = "+proj=longlat +ellps=evrst30 +towgs84=283.729,735.942,261.143,0,0,0,0 +no_defs"; //epsg4682
-		
-		//Projected Coordinate Systems
-		//BTM using Local Datum Everest 1930 (1937 Adjustment) EPSG 9678
-		var proj_name = 'BTM'
-		var a = 6377276.345
-		var b = 6356075.413
-		var f = (a-b)/a
-		var f_inverse = 1/f
-		var dx = 283.729
-		var dy = 735.942
-		var dz = 261.143
-		var rx = 0
-		var ry = 0
-		var rz = 0
-		var s = 0
-		var proj = 'tmerc'  // Transverse Mercator
-		var fe = 500000     // False Easting
-		var fn = -2000000   // False Northing
-		var k = 0.9996      // Scale Factor
-		var lat_origin = 0  // Central Parallel
-		var lon_origin = 90 // Central Meridian
-		var unit = 'm'      // unit in meter
-		var btm = `+proj=${proj} +lat_0=${lat_origin} +lon_0=${lon_origin} +k=${k} +x_0=${fe} +y_0=${fn} +a=${a} +b=${b} +towgs84=${dx},${dy},${dz},${rx},${ry},${rz},${s} +units=${unit} +no_defs`
-		
-		//using global WGS84 datum
-		var utm45N = "+proj=utm +zone=45 +datum=WGS84 +units=m +no_defs"; //epsg32645
-		var utm46N = "+proj=utm +zone=46 +datum=WGS84 +units=m +no_defs"; //epsg32646
-		var butm2000 = "+proj=tmerc +lat_0=0 +lon_0=90 +k=0.9996 +x_0=500000 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs" //epsg9680
-		
-		
-		var coordinate_systems = {
-			"WGS84":wgs84,
-			"GULSHAN303":gulshan303,
-			"BTM": btm, 
-			"BUTM2010":butm2000, 
-			"UTM45N":utm45N, 
-			"UTM46N":utm46N
-		}
-		
-		//General Conversion Function lon,easting = x and lat,northing = y
-		function convert_coordinate(from,to,x,y){
-			var converted_x = proj4(coordinate_systems[from], coordinate_systems[to], [x,y])[0]
-			var converted_y = proj4(coordinate_systems[from], coordinate_systems[to], [x,y])[1]
-			return [converted_x, converted_y]
-		}
-		
-		//Testing
-		//Easting = 557825m and Northing = 666932m gives Latitude = 24.116377062446542degree and Longitude = 90.5662427832349 respectively
-		//var lat = convert_coordinate("BTM", "WGS84", 557825, 666932)[1]
-		//var lon = convert_coordinate("BTM", "WGS84", 557825, 666932)[0]
-		//console.log(lat, lon);
-		
-	</script>
 	
     <script type="text/javascript">
 	
@@ -304,8 +248,8 @@
 								
 							}
 							//console.log(interimPoints.features[0].geometry.coordinates)
-							L.geoJson(transectPointsJson).addTo(map);
-							L.geoJson(transectLinesJson).addTo(map);
+							//L.geoJson(transectPointsJson).addTo(map);
+							L.geoJson(transectLinesJson).setStyle({color: 'red', weight: 2}).addTo(map);
 							map.fitBounds(l.getBounds())
 							console.log(transectPointsJson.features)
 							
@@ -324,7 +268,7 @@
                         alert("This browser does not support HTML5.");
                     }
                 } else {
-                    alert("Please upload a valid XML file.");
+                    alert("Please upload a valid KML file.");
                 }
             });
         });
