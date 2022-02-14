@@ -75,11 +75,19 @@
 	  <option value="bothTransect" selected>Both</option>
 	</select>
 	
+	<label for="convertToVal">Choose Projection</label>
+	<select name="convertToVal" id="convertToVal">
+	  <option value="UTM45N" selected>UTM45N</option>
+	  <option value="UTM46N">UTM46N</option>
+	</select>
+	
 	<input type="button" id="upload" value="Compute" />
+	
 	
     <hr />
     <div id="dvTable">
     </div>
+	<input type="button" id="downloadCSV" value="Download CSV" hidden />
 	<div> 
         <div id="mapdiv" class="map-page"></div>
     </div>
@@ -159,13 +167,13 @@
 	
     <script type="text/javascript">
 	
-		var convertFromVal = "WGS84"
-		var convertToVal = "UTM45N"
+		//var convertFromVal = "WGS84"
+		//var convertToVal = "UTM45N"
 		var coords = []
-		var latitude = []
-		var longitude = []
-		var easting = []
-		var northing = []
+		//var latitude = []
+		//var longitude = []
+		//var easting = []
+		//var northing = []
 		//var transectInterval = 0.1 //kilometer
 		//var transectLength = 0.2 //kilometer
         $(function () {
@@ -176,8 +184,8 @@
 						var transectInterval = $("#transectInterval").val()/1000
 						var transectLength = $("#transectLength").val()/1000
 						var transectSide = $("#transectSide").val()
-						
-						
+						var convertFromVal = "WGS84"
+						var convertToVal = $("#convertToVal").val()
 
 						
 						
@@ -187,14 +195,14 @@
                             var coordinates = $(xmlDoc).find("coordinates")[0].innerHTML.trim().split(" ");
 							//console.log(coordinates)
 							for (var i = 0; i < coordinates.length; i++){
-								lat = Number(coordinates[i].split(",")[1])
-								lon = Number(coordinates[i].split(",")[0])
-								est = convert_coordinate(convertFromVal, convertToVal, lon, lat)[1].toFixed(0)
-								nrt = convert_coordinate(convertFromVal, convertToVal, lon, lat)[0].toFixed(0)
-								latitude.push(lat)
-								longitude.push(lon)
-								easting.push(est)
-								northing.push(nrt)
+								var lat = Number(coordinates[i].split(",")[1])
+								var lon = Number(coordinates[i].split(",")[0])
+								//est = convert_coordinate(convertFromVal, convertToVal, lon, lat)[1].toFixed(0)
+								//nrt = convert_coordinate(convertFromVal, convertToVal, lon, lat)[0].toFixed(0)
+								//latitude.push(lat)
+								//longitude.push(lon)
+								//easting.push(est)
+								//northing.push(nrt)
 								coords.push([lat,lon])
 							}
 							//console.log(coords)
@@ -225,6 +233,10 @@
 							};
 							
 							
+							//Create HTML table for visualiztion of Data and download as csv
+							console.log("sl","Easting", "Northing", "Location")
+							var table_html = '<table class="table table-bordered table-hover p-2">';
+							table_html += '<tr><th>SL</th><th>Easting</th><th>Northing</th><th>Location</th></tr>';
 							
 							for(let i = 1; i <= length / transectInterval; i++){
 								interimPointsJson.features.push(turf.along(jsonLine, i * transectInterval,'kilometers'));
@@ -252,10 +264,25 @@
 								transectPointsJson.features.push(adjacentLeft)
 								transectPointsJson.features.push(adjacentRight)
 								
+								//Left Point
+								var lonLeft = adjacentLeft.geometry.coordinates[0] //turfjs lon is in first position
+								var latLeft = adjacentLeft.geometry.coordinates[1] //turfjs lat is in second position
+								var estLeft = convert_coordinate(convertFromVal, convertToVal, lonLeft, latLeft)[0].toFixed(2)
+								var nrtLeft = convert_coordinate(convertFromVal, convertToVal, lonLeft, latLeft)[1].toFixed(2)
+								console.log(i*2-1,estLeft, nrtLeft, "Left")
+								table_html += `<tr><td>${i*2-1}</td><td>${estLeft}</td><td>${nrtLeft}</td><td>Left</td></tr>`;
+
+								
+								//Right Point
+								var lonRight = adjacentRight.geometry.coordinates[0] //turfjs lon is in first position
+								var latRight = adjacentRight.geometry.coordinates[1] //turfjs lat is in second position
+								var estRight = convert_coordinate(convertFromVal, convertToVal, lonRight, latRight)[0].toFixed(2)
+								var nrtRight = convert_coordinate(convertFromVal, convertToVal, lonRight, latRight)[1].toFixed(2)
+								console.log(i*2,estRight, nrtRight, "Right")
+								table_html += `<tr><td>${i*2}</td><td>${estRight}</td><td>${nrtRight}</td><td>Right</td></tr>`;
+								
 								transectLine = turf.lineString([adjacentLeft.geometry.coordinates, adjacentRight.geometry.coordinates]);
 								transectLinesJson.features.push(transectLine);
-								
-								
 								
 							}
 							//console.log(interimPoints.features[0].geometry.coordinates)
@@ -263,6 +290,12 @@
 							L.geoJson(transectLinesJson).addTo(map);
 							map.fitBounds(l.getBounds())
 							console.log(transectPointsJson.features)
+							
+							table_html += '</table>';
+                            var dvTable = $("#dvTable");
+                            dvTable.html("");
+                            dvTable.append(table_html);
+							$('#downloadCSV').removeAttr('hidden');
 							
 							/*
                             //Create a HTML Table element.
@@ -308,6 +341,48 @@
 		}
 
     </script>
+	
+	<script type="text/javascript">
+
+		function downloadCSVFile(csv, filename) {
+			var csv_file, download_link;
+			csv_file = new Blob([csv], {type: "text/csv"});
+			download_link = document.createElement("a");
+			download_link.download = filename;
+			download_link.href = window.URL.createObjectURL(csv_file);
+			download_link.style.display = "none";
+			document.body.appendChild(download_link);
+			download_link.click();
+			//window.location.reload();
+		}
+
+		document.getElementById("downloadCSV").addEventListener("click", function () {
+		    var html = document.querySelector("table").outerHTML;
+			htmlToCSV(html, "runline.csv");
+		});
+
+
+		function htmlToCSV(html, filename) {
+			var data = [];
+			var rows = document.querySelectorAll("table tr");
+			for (var i = 0; i < rows.length; i++) {
+				var row = [], cols = rows[i].querySelectorAll("td, th");
+				 for (var j = 0; j < cols.length; j++) {
+				        row.push(cols[j].innerText);
+		                 }
+				data.push(row.join(","));		
+			}
+
+			//to remove table heading
+			//data.shift()
+
+			downloadCSVFile(data.join("\n"), filename);
+		}
+
+	</script>
+	
+	
+	
 	<script>
 		//Define Variable
 		var marker
