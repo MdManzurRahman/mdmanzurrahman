@@ -102,20 +102,6 @@
     var defaultZoom = 7;
 	
 	var bounds = new L.LatLngBounds(new L.LatLng(19, 87), new L.LatLng(27, 93));
-    
-	//Defining a leaflet map object
-    var map = L.map('mapdiv', {
-            center: [defaultLat, defaultLon],
-            zoom: defaultZoom,
-            zoomControl:true, 
-            attributionControl:true,
-			maxBounds: bounds,
-			maxBoundsViscosity: 0.1
-        })
-	//map.fitWorld();	
-	//map.fitBounds(bounds)
-	//map.fitBounds([[20, 88], [26, 92]])
-	
 		
 	//Basemaps xyz services	//https://leaflet-extras.github.io/leaflet-providers/preview/ for more basemaps
     var lyrOSM = L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png');
@@ -138,8 +124,37 @@
 		maxZoom: 20
 	});
 	
+	var baseMaps = {
+		"Open Street Map": lyrOSM,
+		"CartoDB": layerCartoDB,
+		"ESRI World Gray": esriWorldGray,
+		"ESRI World Imagery": Esri_WorldImagery,
+		"Google Map": layerGoogleMap,
+		"Google Map Satellite Hybrid": layerGoogleMapSatelliteHybrid
+	};
+	
+	var overlayMaps = {
+		//put layers here
+	};
+	
+		//Defining a leaflet map object
+    var map = L.map('mapdiv', {
+            center: [defaultLat, defaultLon],
+            zoom: defaultZoom,
+            zoomControl:true, 
+            attributionControl:true,
+			layers: [layerGoogleMapSatelliteHybrid],
+			maxBounds: bounds,
+			maxBoundsViscosity: 0.1
+        })
+	//map.fitWorld();	
+	//map.fitBounds(bounds)
+	//map.fitBounds([[20, 88], [26, 92]])
+	
 	//Add Basemap to Leaflet Map
-    map.addLayer(layerGoogleMapSatelliteHybrid);
+    //map.addLayer(layerGoogleMapSatelliteHybrid);
+	
+	L.control.layers(baseMaps, overlayMaps).addTo(map);
 
 
 	// Create additional Control Placing Positions
