@@ -94,11 +94,11 @@
 	
 	
 // loading GeoJSON file
-	$.getJSON("gisdata/data.json",function(data){
+	$.getJSON("gisdata/riv_405_wgs84.json",function(data){
 		// add GeoJSON layer to the map once the file is loaded
 		var datalayer = L.geoJSON(data ,{
 			onEachFeature: function(feature, featureLayer) {
-				featureLayer.bindPopup(feature.properties["Station ID"]);
+				featureLayer.bindPopup(feature.properties["WBNAME"]);
 			}
 		}).addTo(map);
 		map.fitBounds(datalayer.getBounds());
